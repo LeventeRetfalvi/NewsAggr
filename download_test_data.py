@@ -2,10 +2,16 @@ import json
 import os
 from urllib.request import urlopen, urlparse, urlretrieve, urlunparse
 
+import pandas as pd
 import requests
 from dotenv import load_dotenv
 
 load_dotenv()
+
+CSV_FILE_NAME = "data.csv"
+CSV_COLUMN_PATH = "Path"
+
+CSV_COLUMN_DEFINITION = {CSV_COLUMN_PATH: [], "Any number": [], "Any string": []}
 
 
 def downloadArticle(url, out_folder):
@@ -19,6 +25,7 @@ def downloadArticle(url, out_folder):
     print(f"path {outpath}")
 
     urlretrieve(url, outpath)
+    return outpath
 
 
 # downloadArticle(
@@ -38,6 +45,8 @@ def downloadFeedly(callback):
     # print(r.text)
 
     obj = json.loads(r.text)
+    # FIXME: handle errors
+    print(obj)
     print(obj["id"])
     print(len(obj["items"]))
 
@@ -50,12 +59,44 @@ def downloadFeedly(callback):
 
 
 def handleFeedlyItem(url):
+    global duplicates
+    global newArticles
+    global errors
+
     print(url)
     out_folder = os.getenv("TEST_DATA_FOLDER")
     try:
-        downloadArticle(url, out_folder)
+        path = downloadArticle(url, out_folder)
+        for i in df.index:
+            if df[CSV_COLUMN_PATH][i] == path:
+                duplicates += 1
+                return False
+        df.loc[len(df.index)] = [path, 123, "abrakadabra"]
+        newArticles += 1
+        return True
     except Exception as err:
+        errors += 1
         print("Unexpected error: ", err)
 
 
+newArticles = 0
+duplicates = 0
+errors = 0
+
+
+csvpath = os.path.join(os.getenv("TEST_DATA_FOLDER"), CSV_FILE_NAME)
+if os.path.isfile(csvpath):
+    df = pd.read_csv(csvpath)
+else:
+    df = pd.DataFrame(CSV_COLUMN_DEFINITION)
+
 downloadFeedly(handleFeedlyItem)
+
+# handleFeedlyItem("https://virgo.hu/szolgaltatas/e-commerce-uzletfejlesztes/")
+# handleFeedlyItem("https://virgo.hu/karrier/")
+
+df.to_csv(csvpath, index=False)
+
+print(
+    f"Added {newArticles} and skipped {duplicates} duplicates; {errors} errors occured."
+)
