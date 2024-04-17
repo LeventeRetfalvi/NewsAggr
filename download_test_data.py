@@ -9,9 +9,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 CSV_FILE_NAME = "data.csv"
+CSV_COLUMN_URL = "Url"
 CSV_COLUMN_PATH = "Path"
 
-CSV_COLUMN_DEFINITION = {CSV_COLUMN_PATH: [], "Any number": [], "Any string": []}
+CSV_COLUMN_DEFINITION = {
+    CSV_COLUMN_URL: [],
+    CSV_COLUMN_PATH: [],
+    "Any number": [],
+    "Any string": [],
+}
 
 
 def downloadArticle(url, out_folder):
@@ -42,18 +48,23 @@ def downloadFeedly(callback):
     }
 
     r = requests.get(url, headers=headers)
-    # print(r.text)
 
     obj = json.loads(r.text)
-    # FIXME: handle errors
-    print(obj)
-    print(obj["id"])
-    print(len(obj["items"]))
+    if r.status_code != 200:
+        raise Exception(
+            "Cannot dowload Feedly: {errorMessage}.".format(
+                errorMessage=obj["errorMessage"]
+            )
+        )
+
+    # print(obj)
+    # print(obj["id"])
+    # print(len(obj["items"]))
 
     for i in obj["items"]:
         try:
             url = i["canonicalUrl"]
-        except:
+        except Exception:
             url = i["alternate"][0]["href"]
         callback(url)
 
@@ -66,12 +77,12 @@ def handleFeedlyItem(url):
     print(url)
     out_folder = os.getenv("TEST_DATA_FOLDER")
     try:
-        path = downloadArticle(url, out_folder)
         for i in df.index:
-            if df[CSV_COLUMN_PATH][i] == path:
+            if df[CSV_COLUMN_URL][i] == url:
                 duplicates += 1
                 return False
-        df.loc[len(df.index)] = [path, 123, "abrakadabra"]
+        path = downloadArticle(url, out_folder)
+        df.loc[len(df.index)] = [url, path, 123, "test string"]
         newArticles += 1
         return True
     except Exception as err:
