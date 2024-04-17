@@ -4,6 +4,7 @@ from urllib.request import urlopen, urlparse, urlretrieve, urlunparse
 
 import pandas as pd
 import requests
+import trafilatura
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,13 +25,17 @@ def downloadArticle(url, out_folder):
     filename = url.split("/")[-1]
     if filename == "":
         filename = url.split("/")[-2]
-    if not filename.endswith(".html") and not filename.endswith(".htm"):
-        filename += ".html"
+    filename += ".txt"
 
     outpath = os.path.join(out_folder, filename)
     print(f"path {outpath}")
 
-    urlretrieve(url, outpath)
+    # urlretrieve(url, outpath)
+    downloaded = trafilatura.fetch_url(url)
+    content = trafilatura.extract(downloaded)
+    with open(outpath, "w") as articleFile:
+        print(content, file=articleFile)
+
     return outpath
 
 
@@ -100,6 +105,7 @@ if os.path.isfile(csvpath):
     df = pd.read_csv(csvpath)
 else:
     df = pd.DataFrame(CSV_COLUMN_DEFINITION)
+
 
 downloadFeedly(handleFeedlyItem)
 
