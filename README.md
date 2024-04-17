@@ -31,7 +31,7 @@ The python related settings are in the `.vscode/settings.json` file that can be 
 - Ctrl+Shift+P -> select `"Python: Select Interpreter"`
 - Optional: If you want the integrated terminal in VS Code to automatically activate your Pipenv environment, you can set the `python.terminal.activateEnvironment` setting to true in your workspace settings (`.vscode/settings.json`).
 
-### : Adding a new dependency to Pipenv environment
+### Adding a new dependency to Pipenv environment
 
 ```
 - pipenv install <package_name>
