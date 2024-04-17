@@ -33,7 +33,7 @@ def downloadArticle(url, out_folder):
     # urlretrieve(url, outpath)
     downloaded = trafilatura.fetch_url(url)
     content = trafilatura.extract(downloaded)
-    with open(outpath, "w") as articleFile:
+    with open(outpath, "w", encoding="utf-8") as articleFile:
         print(content, file=articleFile)
 
     return outpath
